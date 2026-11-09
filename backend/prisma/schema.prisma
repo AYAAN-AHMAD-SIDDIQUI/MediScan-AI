@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =========================
+// USER
+// =========================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("PATIENT")
+  createdAt DateTime @default(now())
+
+  patient Patient?
+  doctor  Doctor?
+}
+
+// =========================
+// PATIENT
+// =========================
+
+model Patient {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dateOfBirth DateTime?
+  gender      String?
+  phone       String?
+
+  reports   MedicalReport[]
+  xrayScans XrayScan[]
+
+  createdAt DateTime @default(now())
+}
+
+// =========================
+// DOCTOR
+// =========================
+
+model Doctor {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  specialization String?
+  licenseNumber  String?
+
+  createdAt DateTime @default(now())
+}
+
+// =========================
+// MEDICAL REPORT
+// =========================
+
+model MedicalReport {
+  id        Int     @id @default(autoincrement())
+  patientId Int
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  fileUrl    String
+  fileType   String
+  reportType String?
+  status     String  @default("PENDING")
+
+  analysis ReportAnalysis?
+
+  createdAt DateTime @default(now())
+}
+
+// =========================
+// REPORT ANALYSIS
+// =========================
+
+model ReportAnalysis {
+  id       Int           @id @default(autoincrement())
+  reportId Int           @unique
+  report   MedicalReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  result Json
+
+  createdAt DateTime @default(now())
+}
+
+// =========================
+// X-RAY SCAN
+// =========================
+
+model XrayScan {
+  id        Int     @id @default(autoincrement())
+  patientId Int
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  fileUrl  String
+  fileType String
+  bodyPart String?
+  status   String  @default("PENDING")
+
+  analysis XrayAnalysis?
+
+  createdAt DateTime @default(now())
+}
+
+// =========================
+// X-RAY ANALYSIS
+// =========================
+
+model XrayAnalysis {
+  id     Int      @id @default(autoincrement())
+  xrayId Int      @unique
+  xray   XrayScan @relation(fields: [xrayId], references: [id], onDelete: Cascade)
+
+  result Json
+
+  createdAt DateTime @default(now())
+}
+model MedicineScan {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  ocrText     String   @db.Text
+  medicineName String?
+  strength    String?
+  manufacturer String?
+  ingredients String?
+  confidence  Int      @default(0)
+  status      String   @default("NEEDS_REVIEW")
+  result      Json
+  createdAt   DateTime @default(now())
+}
